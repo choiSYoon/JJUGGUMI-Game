@@ -80,10 +80,10 @@ void print_status(void) {
 
 
 void dialog(char message[]) {
-	char prscreen[ROW_MAX][COL_MAX];
+	char front_buf[ROW_MAX][COL_MAX];
 	for (int row = 0; row < N_ROW; row++) {
 		for (int col = 0; col < N_COL; col++) {
-			prscreen[row][col] = back_buf[row][col];
+			front_buf[row][col] = back_buf[row][col];
 		}
 	}
 
@@ -91,8 +91,7 @@ void dialog(char message[]) {
 
 	int retime = DIALOG_DURATION_SEC;
 	while (retime >= 1) {
-		//system("cls");
-
+		
 		// retime, message
 		gotoxy(N_ROW / 2 - 1, mescol - 4);
 		printf("%d ", retime);
@@ -103,14 +102,18 @@ void dialog(char message[]) {
 		Sleep(1000);
 
 		retime--;
-	}
-
+	}//
+	
+	system("cls");
+	
+	
 	for (int row = 0; row < N_ROW; row++) {
 		for (int col = 0; col < N_COL; col++) {
-			back_buf[row][col] = prscreen[row][col];
+			back_buf[row][col] = front_buf[row][col];
+			printxy(back_buf[row][col], row, col);
 		}
 	}
 
-	//display();
+	display();
+	//reload();
 }
-
