@@ -8,15 +8,16 @@
 #define DIR_LEFT	2
 #define DIR_RIGHT	3
 
-void game_map_init(void);
+void gamemap_init(void);
 void move_manual(key_t key);
 void move_random(int i, int dir);
 void move_tail(int i, int nx, int ny);
 
-int px[PLAYER_MAX], py[PLAYER_MAX], period[PLAYER_MAX];  // 각 플레이어 위치, 이동 주기
-int str_intro = 0;
+int px[PLAYER_MAX], py[PLAYER_MAX], period[PLAYER_MAX], prex[PLAYER_MAX], prey[PLAYER_MAX];  // 각 플레이어 위치, 이동 주기
+int str_intro = 0, tagger_front = 1;
 
-void game_map_init(void) {
+
+void gamemap_init(void) {
 	map_init(9, 35);
 	int x, y;
 	for (int i = 0; i < n_player; i++) {
@@ -102,18 +103,29 @@ void move_random(int player, int dir) {
 }
 
 // back_buf[][]에 기록
-void move_tail(int player, int nx, int ny) {
-	int p = player;  // 이름이 길어서...
-	back_buf[nx][ny] = back_buf[px[p]][py[p]];
-	back_buf[px[p]][py[p]] = ' ';
-	px[p] = nx;
-	py[p] = ny;
+void move_tail(int player2, int nx, int ny) {
+	int p = player2;  // 이름이 길어서...
+	if (player_clear[p] == false && player[p] == true && player_pause == false) {
+		back_buf[nx][ny] = back_buf[px[p]][py[p]];
+		back_buf[px[p]][py[p]] = ' ';
+		px[p] = nx;
+		py[p] = ny;
+	}
 }
 
-void tagger(void) { // 술래 배치
-	back_buf[3][1] = '#';
-	back_buf[4][1] = '#';
-	back_buf[5][1] = '#';
+void tagger(int n) { // 술래 배치
+	if (n == 1) {
+		back_buf[3][1] = '@';
+		back_buf[4][1] = '@';
+		back_buf[5][1] = '@';
+		
+	}
+	else {
+		back_buf[3][1] = '#';
+		back_buf[4][1] = '#';
+		back_buf[5][1] = '#';
+	}
+
 }
 
 int random_move(void) {
@@ -137,7 +149,8 @@ void finish_line(void) {
 	for (int i = 0; i < n_player; i++) {
 		if (1 < px[i] && px[i] <= 6 && py[i] <= 2) {
 			if (!(px[i] == 2 && py[i] == 2 || px[i] == 6 && py[i] == 2)) {
-				back_buf[1][1] = 'F';
+				player_clear[i] = true;
+				back_buf[px[i]][py[i]] = ' ';
 			}
 		}
 	}
@@ -146,15 +159,17 @@ void finish_line(void) {
 void reload(void) { //맵 다시로드
 	system("cls");
 	map_init(9, 35);
-	tagger();
+	tagger(0);
 	for (int i = 0; i < n_player; i++) {
-		back_buf[px[i]][py[i]] = '0' + i;
+		if (player[i] == true && player_clear[i] == false) {
+			back_buf[px[i]][py[i]] = '0' + i;
+		}
 	}
 }
 
 void comment(void) {
 	char intro[] = "무궁화 꽃이 피었습니다";
-	if (tick % (str_intro < 11 ? 1000 : 200) == 0) {
+	if (tick % (str_intro < 11 ? 1000 : 200) == 0 && tagger_front == 1) {
 		gotoxy(N_ROW, str_intro);
 		if (intro[str_intro] < 0) {
 			printf("%c%c", intro[str_intro], intro[str_intro + 1]);
@@ -167,17 +182,47 @@ void comment(void) {
 	}
 }
 
-void start_game(void) { //모든 플레이어를 출발선으로 배치, 술래 배치
-	tagger();
-	for (int i = 0; i < n_player; i++) {
-		move_tail(i, 3 + i, 33);
+void player_move_check(void) {
+	if (tagger_front == 1) {
+		for (int i = 0; i < n_player; i++) {
+			prex[i] = px[i];
+			prey[i] = py[i];
+		}
+	}
+	else {
+		for (int i = 0; i < n_player; i++) {
+			if (px[i] != prex[i] || py[i] != prey[i]) {
+				player[i] = false;
+				back_buf[px[i]][py[i]] = ' ';
+			}
+		}
 	}
 }
 
-void mugunghwa(void) {
-	game_map_init();
+void start_game(void) { //모든 플레이어를 출발선으로 배치, 술래 배치
+	gamemap_init();
 	system("cls");
 	display();
+	tagger(0);
+	for (int i = 0; i < n_player; i++) {
+		if (n_player >= 7) {
+			move_tail(i, 1 + i, 33);
+		}
+		else if (n_player >= 5) {
+			move_tail(i, 2 + i, 33);
+		}
+		else if (n_player >= 3) {
+			move_tail(i, 3 + i, 33);
+		}
+		else {
+			move_tail(i, 4 + i, 33);
+		}
+	}
+	dialog("곧 게임이 시작됩니다.");
+	reload(); // dialog가 비정상적 작동을 해서 맵 다시불러오는 임시 코드 (추후 삭제바람)
+}
+
+void mugunghwa(void) {
 	start_game();
 	while (1) {
 		// player 0만 손으로 움직임(4방향)
@@ -190,18 +235,32 @@ void mugunghwa(void) {
 		}
 
 		for (int i = 1; i < n_player; i++) {
-			if (tick % period[i] == 0) {
+			if (tick % period[i] == 0 && tagger_front == 1) { // 뒤에 볼 때
 				move_random(i, random_move());
+			}
+			else if (tick % period[i] == 0 && tagger_front == 0) { // 앞에 볼 때
+				int rand_move;
+				rand_move = rand() % 99; //0~99 랜덤한 숫자
+				if (rand_move <= 9) { // 10% 확률로 움직임
+					move_random(i, random_move());
+				}
 			}
 		}
 		finish_line();
+		player_move_check();
 		comment();
 		display();
 		Sleep(10);
 		tick += 10;
+		if (tick % 3000 == 0 && tagger_front == 0) {
+			tagger_front = 1;
+			reload();
+		}
 		if (str_intro == 22) {
 			str_intro = 0;
-			reload();
+			tagger_front = 0;
+			tagger(1);
+			tick = 0;
 		}
 	}
 }

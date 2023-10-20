@@ -3,19 +3,19 @@
 
 #include <stdbool.h>
 
-// í™”ë©´ í¬ê¸°(ë§µ í¬ê¸°x. ë§µ + ìƒíƒœì°½)
+// È­¸é Å©±â(¸Ê Å©±âx. ¸Ê + »óÅÂÃ¢)
 #define ROW_MAX		40
 #define COL_MAX		80
 
-// ë”ë¸” ë²„í¼ë§
-// back_buf[][]ê°€ ë§µì´ê³ , 
-// front_buf[][]ëŠ” í™”ë©´ì— ì¶œë ¥í•˜ê¸° ìœ„í•œ ì •ë³´
-// ì°¸ê³ : https://codevang.tistory.com/39
-// ìœˆë„ìš°APIë¡œë„ ê°€ëŠ¥: https://game-happy-world.tistory.com/46
+// ´õºí ¹öÆÛ¸µ
+// back_buf[][]°¡ ¸ÊÀÌ°í, 
+// front_buf[][]´Â È­¸é¿¡ Ãâ·ÂÇÏ±â À§ÇÑ Á¤º¸
+// Âü°í: https://codevang.tistory.com/39
+// À©µµ¿ìAPI·Îµµ °¡´É: https://game-happy-world.tistory.com/46
 char front_buf[ROW_MAX][COL_MAX];
 char back_buf[ROW_MAX][COL_MAX];
 
-// ë§µ í¬ê¸°(ìœ„ì˜ bufëŠ” í…ìŠ¤íŠ¸ê¹Œì§€ í¬í•¨í•œ ìº”ë²„ìŠ¤ í¬ê¸°)
+// ¸Ê Å©±â(À§ÀÇ buf´Â ÅØ½ºÆ®±îÁö Æ÷ÇÔÇÑ Äµ¹ö½º Å©±â)
 int N_ROW, N_COL;
 
 void map_init(int n_row, int n_col);
