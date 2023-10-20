@@ -9,20 +9,20 @@
 void draw(void);
 void print_status(void);
 
-// (zero-base) rowÇà, col¿­·Î Ä¿¼­ ÀÌµ¿
+// (zero-base) rowí–‰, colì—´ë¡œ ì»¤ì„œ ì´ë™
 void gotoxy(int row, int col) {
 	COORD pos = { col,row };
 	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), pos);
 }
 
-// rowÇà, col¿­¿¡ ch Ãâ·Â
+// rowí–‰, colì—´ì— ch ì¶œë ¥
 void printxy(char ch, int row, int col) {
 	gotoxy(row, col);
 	printf("%c", ch);
 }
 
 void map_init(int n_row, int n_col) {
-	// µÎ ¹öÆÛ¸¦¸¦ ¿ÏÀüÈ÷ ºñ¿ì±â
+	// ë‘ ë²„í¼ë¥¼ë¥¼ ì™„ì „íˆ ë¹„ìš°ê¸°
 	for (int i = 0; i < ROW_MAX; i++) {
 		for (int j = 0; j < COL_MAX; j++) {
 			back_buf[i][j] = front_buf[i][j] = ' ';
@@ -32,7 +32,7 @@ void map_init(int n_row, int n_col) {
 	N_ROW = n_row;
 	N_COL = n_col;
 	for (int i = 0; i < N_ROW; i++) {
-		// ´ëÀÔ¹® ÀÌ·¸°Ô ¾µ ¼ö ÀÖ´Âµ¥ ÀÏºÎ·¯ ¾È °¡¸£ÃÄÁáÀ½
+		// ëŒ€ì…ë¬¸ ì´ë ‡ê²Œ ì“¸ ìˆ˜ ìˆëŠ”ë° ì¼ë¶€ëŸ¬ ì•ˆ ê°€ë¥´ì³ì¤¬ìŒ
 		back_buf[i][0] = back_buf[i][N_COL - 1] = '*';
 
 		for (int j = 1; j < N_COL - 1; j++) {
@@ -41,7 +41,7 @@ void map_init(int n_row, int n_col) {
 	}
 }
 
-// back_buf[row][col]ÀÌ ÀÌµ¿ÇÒ ¼ö ÀÖ´Â ÀÚ¸®ÀÎÁö È®ÀÎÇÏ´Â ÇÔ¼ö
+// back_buf[row][col]ì´ ì´ë™í•  ìˆ˜ ìˆëŠ” ìë¦¬ì¸ì§€ í™•ì¸í•˜ëŠ” í•¨ìˆ˜
 bool placable(int row, int col) {
 	if (row < 0 || row >= N_ROW ||
 		col < 0 || col >= N_COL ||
@@ -51,10 +51,10 @@ bool placable(int row, int col) {
 	return true;
 }
 
-// »ó´Ü¿¡ ¸ÊÀ», ÇÏ´Ü¿¡´Â ÇöÀç »óÅÂ¸¦ Ãâ·Â
+// ìƒë‹¨ì— ë§µì„, í•˜ë‹¨ì—ëŠ” í˜„ì¬ ìƒíƒœë¥¼ ì¶œë ¥
 void display(void) {
 	draw();
-	gotoxy(N_ROW + 4, 0);  // Ãß°¡·Î Ç¥½ÃÇÒ Á¤º¸°¡ ÀÖÀ¸¸é ¸Ê°ú »óÅÂÃ¢ »çÀÌÀÇ ºó °ø°£¿¡ Ãâ·Â
+	gotoxy(N_ROW + 4, 0);  // ì¶”ê°€ë¡œ í‘œì‹œí•  ì •ë³´ê°€ ìˆìœ¼ë©´ ë§µê³¼ ìƒíƒœì°½ ì‚¬ì´ì˜ ë¹ˆ ê³µê°„ì— ì¶œë ¥
 	print_status();
 }
 
@@ -67,15 +67,49 @@ void draw(void) {
 			}
 		}
 	}
+	
 }
 
 void print_status(void) {
 	printf("no. of players left: %d\n", n_alive);
 	for (int p = 0; p < n_player; p++) {
-		printf("player %2d: %5s\n", p, player[p] ? "alive" : "DEAD");		
+		printf("player %2d: %5s\n", p, player[p] ? "alive" : "DEAD");
 	}
 }
 
-void dialog(char message[]) {
 
+void dialog(char message[]) {
+	// Store the previous screen content
+	char prscreen[ROW_MAX][COL_MAX];
+	for (int row = 0; row < N_ROW; row++) {
+		for (int col = 0; col < N_COL; col++) {
+			prscreen[row][col] = back_buf[row][col];
+		}
+	}
+
+	int retime = DIALOG_DURATION_SEC;
+	while (retime >= 0) {
+		system("cls");
+
+		
+		gotoxy(N_ROW / 2 - 1, N_COL / 2 - strlen(message) / 2);
+		printf("%d seconds remaining", retime);
+		gotoxy(N_ROW / 2, N_COL / 2 - strlen(message) / 2);
+		printf("%s", message);
+
+		
+		Sleep(1000);
+
+		retime--;
+	}
+
+
+	for (int row = 0; row < N_ROW; row++) {
+		for (int col = 0; col < N_COL; col++) {
+			back_buf[row][col] = prscreen[row][col];
+		}
+	}
+
+	
+	display();
 }

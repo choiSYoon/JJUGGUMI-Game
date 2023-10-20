@@ -1,4 +1,4 @@
-// 2023-2 °í±ŞÇÁ·Î±×·¡¹Ö °úÁ¦: ÂŞ²Ù¹Ì °ÔÀÓ
+// 2023-2 ê³ ê¸‰í”„ë¡œê·¸ë˜ë° ê³¼ì œ: ì­ˆê¾¸ë¯¸ ê²Œì„
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -9,7 +9,7 @@
 
 int jjuggumi_init(void);
 
-// low ÀÌ»ó high ÀÌÇÏ ³­¼ö¸¦ ¹ß»ı½ÃÅ°´Â ÇÔ¼ö
+// low ì´ìƒ high ì´í•˜ ë‚œìˆ˜ë¥¼ ë°œìƒì‹œí‚¤ëŠ” í•¨ìˆ˜
 int randint(int low, int high) {
 	int rnum = rand() % (high - low + 1) + low;
 	return rnum;
@@ -18,7 +18,7 @@ int randint(int low, int high) {
 int jjuggumi_init(void) {
 	srand((unsigned int)time(NULL));
 
-	printf("ÇÃ·¹ÀÌ¾î ¼ö: ");
+	printf("í”Œë ˆì´ì–´ ìˆ˜: ");
 	scanf_s("%d", &n_player);
 
 	n_alive = n_player;
@@ -28,11 +28,50 @@ int jjuggumi_init(void) {
 	return 0;
 }
 
+//ê³¼ì œ 1-1
+int intro(void) { /// ì¸íŠ¸ë¡œ ì‘ì„±, 5ì´ˆ ë‚´ë¡œ ëë‚´ê¸°
+	printf("================ì­ˆê¾¸ë¯¸ ê²Œì„================\n");
+	for (int i = 0; i < 5; i++) {
+		printf("                *                      \n");
+		Sleep(300);
+	}
+	Sleep(1000);
+	printf("                GAME START                \n");
+	
+	
+	return 0;
+}
+
+
+int ending(void) {//ìš°ìŠ¹ì ì¶œë ¥
+	
+
+
+
+
+	printf("ìš°ìŠ¹ìëŠ” %dì…ë‹ˆë‹¤.\n",1);
+
+
+	return 0;
+}
+
+
+
+
+
 int main(void) {
 	jjuggumi_init();
+	//1-1
+	intro();
+
+
+	//sample();
 	mugunghwa();
 	//nightgame();
 	//juldarigi();
 	//jebi();
+
+	//1-1
+	ending();
 	return 0;
 }
