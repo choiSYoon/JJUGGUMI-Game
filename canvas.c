@@ -115,5 +115,5 @@ void dialog(char message[]) {
 	}
 
 	display();
-	//reload();
+	//reload(); 제거해도 됩니다.
 }
