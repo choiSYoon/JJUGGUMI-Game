@@ -79,7 +79,6 @@ void print_status(void) {
 
 
 void dialog(char message[]) {
-	// Store the previous screen content
 	char prscreen[ROW_MAX][COL_MAX];
 	for (int row = 0; row < N_ROW; row++) {
 		for (int col = 0; col < N_COL; col++) {
