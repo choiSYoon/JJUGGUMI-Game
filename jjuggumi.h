@@ -10,7 +10,7 @@ bool player[PLAYER_MAX];  // 기본값 true, 탈락하면 false
 bool player_clear[PLAYER_MAX]; // 기본값 true, 탈락하면 false
 bool player_pause; // 기본값 true, 미니게임이 정지되지 않으면 false
 
-int n_player, n_alive;
+int n_player, n_alive; 
 int tick;  // 시계
 
 // 미니게임

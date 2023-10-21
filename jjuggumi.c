@@ -40,7 +40,19 @@ int intro(void) { /// 인트로 작성, 5초 내로 끝내기
 }
 
 int ending(void) {//우승자 출력
-	printf("우승자는 %d입니다.\n", 1);
+	int winner = 0;
+	for (int i = 0; i < n_player; i++) {
+		if (player[i] == true) { winner++; }
+	}
+	if (winner >= 2 || winner == 0) {
+		printf("우승자를 가리지 못했습니다.\n");
+	}
+	else {
+		for (int i = 0; i < n_player; i++) {
+			if (player[i] == true) { printf("우승자는 %d 번 플레이어 입니다.\n", i); }
+		}
+	}
+	
 	return 0;
 }
 

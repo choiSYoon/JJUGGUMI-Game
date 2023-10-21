@@ -73,7 +73,7 @@ void draw(void) {
 void print_status(void) {
 	printf("no. of players left: %d\n", n_alive);
 	for (int p = 0; p < n_player; p++) {
-		printf("player %2d: %5s\n", p, player[p] ? "alive" : "DEAD");
+		printf("player %2d: %5s%s\n", p, player[p] ? "alive" : "DEAD", player_clear[p] ? ", Stage Clear" : "");
 	}
 }
 
@@ -93,9 +93,19 @@ void dialog(char message[]) {
 	while (retime >= 1) {
 		
 		// retime, message
-		gotoxy(N_ROW / 2 - 1, mescol - 4);
+		
+		for (int i = 0; i < 3; i++) {
+			gotoxy(2, 5);
+			printf("*************************");
+			
+			gotoxy(i + 3, 5);
+			printf("*                       *");
+			gotoxy(6, 5);
+			printf("*************************");
+		}
+		gotoxy(4, mescol - 6);
 		printf("%d ", retime);
-		gotoxy(N_ROW / 2, mescol);
+		gotoxy(4, mescol - 4);
 		printf("%s", message);
 
 		// 1초
@@ -105,7 +115,7 @@ void dialog(char message[]) {
 	}//
 	
 	system("cls");
-	
+	display();
 	
 	for (int row = 0; row < N_ROW; row++) {
 		for (int col = 0; col < N_COL; col++) {
@@ -113,7 +123,5 @@ void dialog(char message[]) {
 			printxy(back_buf[row][col], row, col);
 		}
 	}
-
-	display();
-	//reload(); 제거해도 됩니다.
+	
 }
