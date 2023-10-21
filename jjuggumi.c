@@ -1,4 +1,4 @@
-// 2023-2 °í±ŞÇÁ·Î±×·¡¹Ö °úÁ¦: ÂŞ²Ù¹Ì °ÔÀÓ
+// 2023-2 ê³ ê¸‰í”„ë¡œê·¸ë˜ë° ê³¼ì œ: ì­ˆê¾¸ë¯¸ ê²Œì„
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -9,7 +9,7 @@
 
 int jjuggumi_init(void);
 
-// low ÀÌ»ó high ÀÌÇÏ ³­¼ö¸¦ ¹ß»ı½ÃÅ°´Â ÇÔ¼ö
+// low ì´ìƒ high ì´í•˜ ë‚œìˆ˜ë¥¼ ë°œìƒì‹œí‚¤ëŠ” í•¨ìˆ˜
 int randint(int low, int high) {
 	int rnum = rand() % (high - low + 1) + low;
 	return rnum;
@@ -18,7 +18,7 @@ int randint(int low, int high) {
 int jjuggumi_init(void) {
 	srand((unsigned int)time(NULL));
 
-	printf("ÇÃ·¹ÀÌ¾î ¼ö: ");
+	printf("í”Œë ˆì´ì–´ ìˆ˜: ");
 	scanf_s("%d", &n_player);
 
 	n_alive = n_player;
@@ -28,28 +28,43 @@ int jjuggumi_init(void) {
 	return 0;
 }
 
-int intro(void) { /// ÀÎÆ®·Î ÀÛ¼º, 5ÃÊ ³»·Î ³¡³»±â
-	printf("================ÂŞ²Ù¹Ì °ÔÀÓ================\n");
-	for (int i = 0; i < 5; i++) {
-		printf("                *                      \n");
+int intro(void) { /// ì¸íŠ¸ë¡œ ì‘ì„±, 5ì´ˆ ë‚´ë¡œ ëë‚´ê¸°
+	printf("================ì­ˆê¾¸ë¯¸ ê²Œì„================\n");
+	Sleep(300);
+	printf("         *   *****        *\n");
+	printf("        **  *******        **\n");
+	printf("        ** *********        **\n");
+	printf("       *** *  **  **        ***\n");
+	printf("       *** *********        ***\n");
+	printf("        **  *******         ***\n");
+	printf("        **   *****          **\n");
+	printf("         *    ***           **\n");
+	printf("         *******************\n");
+	printf("         *****      *******\n");
+	Sleep(300);
+	printf("===========================================\n");
+	Sleep(1000);
+	
+	system("cls");
+	printf("================GAME START================\n");
+	for (int i = 0; i < 4; i++) {
+		printf("                     *                      \n");
 		Sleep(300);
 	}
-	Sleep(1000);
-	printf("                GAME START                \n");
 	return 0;
 }
 
-int ending(void) {//¿ì½ÂÀÚ Ãâ·Â
+int ending(void) {//ìš°ìŠ¹ì ì¶œë ¥
 	int winner = 0;
 	for (int i = 0; i < n_player; i++) {
 		if (player[i] == true) { winner++; }
 	}
 	if (winner >= 2 || winner == 0) {
-		printf("¿ì½ÂÀÚ¸¦ °¡¸®Áö ¸øÇß½À´Ï´Ù.\n");
+		printf("ìš°ìŠ¹ìë¥¼ ê°€ë¦¬ì§€ ëª»í–ˆìŠµë‹ˆë‹¤.\n");
 	}
 	else {
 		for (int i = 0; i < n_player; i++) {
-			if (player[i] == true) { printf("¿ì½ÂÀÚ´Â %d ¹ø ÇÃ·¹ÀÌ¾î ÀÔ´Ï´Ù.\n", i); }
+			if (player[i] == true) { printf("ìš°ìŠ¹ìëŠ” %d ë²ˆ í”Œë ˆì´ì–´ ì…ë‹ˆë‹¤.\n", i); }
 		}
 	}
 	
