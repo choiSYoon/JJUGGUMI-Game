@@ -1,266 +1,296 @@
-#include "jjuggumi.h"
 #include "canvas.h"
+#include "jjuggumi.h"
 #include "keyin.h"
 #include <stdio.h>
 
-#define DIR_UP		0
-#define DIR_DOWN	1
-#define DIR_LEFT	2
-#define DIR_RIGHT	3
+#define DIR_UP    0
+#define DIR_DOWN  1
+#define DIR_LEFT  2
+#define DIR_RIGHT 3
+
+#define TRUE  1
+#define FALSE 0
 
 void gamemap_init(void);
 void move_manual(key_t key);
 void move_random(int i, int dir);
 void move_tail(int i, int nx, int ny);
 
-int px[PLAYER_MAX], py[PLAYER_MAX], period[PLAYER_MAX], prex[PLAYER_MAX], prey[PLAYER_MAX];  // °¢ ÇÃ·¹ÀÌ¾î À§Ä¡, ÀÌµ¿ ÁÖ±â
-int str_intro = 0, tagger_front = 1;
+int px[PLAYER_MAX], py[PLAYER_MAX], period[PLAYER_MAX], prex[PLAYER_MAX], prey[PLAYER_MAX]; // ê° í”Œë ˆì´ì–´ ìœ„ì¹˜, ì´ë™ ì£¼ê¸°
+int movable[PLAYER_MAX];
+int printed_comment_length = 0, tagger_looks_front = FALSE;
+
 
 
 void gamemap_init(void) {
-	map_init(9, 35);
-	int x, y;
-	for (int i = 0; i < n_player; i++) {
-		// °°Àº ÀÚ¸®°¡ ³ª¿À¸é ´Ù½Ã »ı¼º
-		do {
-			x = randint(1, N_ROW - 2);
-			y = randint(1, N_COL - 2);
-		} while (!placable(x, y));
-		px[i] = x;
-		py[i] = y;
-		period[i] = randint(100, 500);
+    map_init(9, 35);
+    int x, y;
+    for (int i = 0; i < n_player; i++) {
+        // ê°™ì€ ìë¦¬ê°€ ë‚˜ì˜¤ë©´ ë‹¤ì‹œ ìƒì„±
+        do {
+            x = randint(1, N_ROW - 2);
+            y = randint(1, N_COL - 2);
+        } while (!placable(x, y));
+        px[i] = x;
+        py[i] = y;
+        period[i] = randint(100, 500);
 
-		back_buf[px[i]][py[i]] = '0' + i;  // (0 .. n_player-1)
-	}
+        back_buf[px[i]][py[i]] = '0' + i; // (0 .. n_player-1)
+    }
 
-	tick = 0;
+    tick = 0;
 }
 
 void move_manual(key_t key) {
-	// °¢ ¹æÇâÀ¸·Î ¿òÁ÷ÀÏ ¶§ x, y°ª delta
-	static int dx[4] = { -1, 1, 0, 0 };
-	static int dy[4] = { 0, 0, -1, 1 };
+    // ê° ë°©í–¥ìœ¼ë¡œ ì›€ì§ì¼ ë•Œ x, yê°’ delta
+    static int dx[4] = { -1, 1, 0, 0 };
+    static int dy[4] = { 0, 0, -1, 1 };
 
-	int dir;  // ¿òÁ÷ÀÏ ¹æÇâ(0~3)
-	switch (key) {
-	case K_UP: dir = DIR_UP; break;
-	case K_DOWN: dir = DIR_DOWN; break;
-	case K_LEFT: dir = DIR_LEFT; break;
-	case K_RIGHT: dir = DIR_RIGHT; break;	
-	default: return;
-	}
+    int dir; // ì›€ì§ì¼ ë°©í–¥(0~3)
+    switch (key) {
+    case K_UP:
+        dir = DIR_UP;
+        break;
+    case K_DOWN:
+        dir = DIR_DOWN;
+        break;
+    case K_LEFT:
+        dir = DIR_LEFT;
+        break;
+    case K_RIGHT:
+        dir = DIR_RIGHT;
+        break;
+    default:
+        return;
+    }
 
-	// ¿òÁ÷¿©¼­ ³õÀÏ ÀÚ¸®
-	int nx, ny;
-	nx = px[0] + dx[dir];
-	ny = py[0] + dy[dir];
-	if (!placable(nx, ny)) {
-		return;
-	}
+    // ì›€ì§ì—¬ì„œ ë†“ì¼ ìë¦¬
+    int nx, ny;
+    nx = px[0] + dx[dir];
+    ny = py[0] + dy[dir];
+    if (!placable(nx, ny)) {
+        return;
+    }
 
-	move_tail(0, nx, ny);
+    move_tail(0, nx, ny);
 }
 
-// 0 <= dir <= 4°¡ ¾Æ´Ï¸é ·£´ı
+// 0 <= dir <= 4ê°€ ì•„ë‹ˆë©´ ëœë¤
 void move_random(int player, int dir) {
-	int p = player;  // ÀÌ¸§ÀÌ ±æ¾î¼­...
-	int nx, ny;  // ¿òÁ÷¿©¼­ ´ÙÀ½¿¡ ³õÀÏ ÀÚ¸®
+    int p = player; // ì´ë¦„ì´ ê¸¸ì–´ì„œ...
+    int nx, ny;     // ì›€ì§ì—¬ì„œ ë‹¤ìŒì— ë†“ì¼ ìë¦¬
 
-	// ¿òÁ÷ÀÏ °ø°£ÀÌ ¾ø´Â °æ¿ì´Â ¾ø´Ù°í °¡Á¤(¹«ÇÑ ·çÇÁ¿¡ ºüÁü)	
+    // ì›€ì§ì¼ ê³µê°„ì´ ì—†ëŠ” ê²½ìš°ëŠ” ì—†ë‹¤ê³  ê°€ì •(ë¬´í•œ ë£¨í”„ì— ë¹ ì§)
 
-	do {
-		if (dir == 0) {
-			nx = px[p] + 1;
-			ny = py[p];
-		}
-		else if (dir == 1) {
-			nx = px[p] - 1;
-			ny = py[p];
-		}
-		else if (dir == 2) {
-			nx = px[p];
-			ny = py[p] - 1;
-		}
-		else if (dir == 3) {
-			nx = px[p];
-			ny = py[p] + 1;
-		}
-		else if (dir == 4) {
-			nx = px[p];
-			ny = py[p];
-		}
-		else {
-			nx = px[p] + randint(-1, 1);
-			ny = py[p] + randint(-1, 0);
-		}
+    do {
+        if (dir == 0) {
+            nx = px[p] + 1;
+            ny = py[p];
+        } else if (dir == 1) {
+            nx = px[p] - 1;
+            ny = py[p];
+        } else if (dir == 2) {
+            nx = px[p];
+            ny = py[p] - 1;
+        } else if (dir == 3) {
+            nx = px[p];
+            ny = py[p] + 1;
+        } else if (dir == 4) {
+            nx = px[p];
+            ny = py[p];
+        } else {
+            nx = px[p] + randint(-1, 1);
+            ny = py[p] + randint(-1, 0);
+        }
 
-		if (!placable(nx, ny)) { // °¡¾ßÇÒ °ø°£ÀÌ ¾øÀ¸¸é ·£´ıÀ¸·Î ´Ù½Ã ÁöÁ¤ ´Ü µÚ·Î´Â ¾øÀ½
-			nx = px[p] + randint(-1, 1);
-			ny = py[p] + randint(-1, 0);
-		}
-	} while (!placable(nx, ny));
-	move_tail(p, nx, ny);
+        if (!placable(nx, ny)) { // ê°€ì•¼í•  ê³µê°„ì´ ì—†ìœ¼ë©´ ëœë¤ìœ¼ë¡œ ë‹¤ì‹œ ì§€ì • ë‹¨ ë’¤ë¡œëŠ” ì—†ìŒ
+            nx = px[p] + randint(-1, 1);
+            ny = py[p] + randint(-1, 0);
+        }
+    } while (!placable(nx, ny));
+    move_tail(p, nx, ny);
 }
 
-// back_buf[][]¿¡ ±â·Ï
+// back_buf[][]ì— ê¸°ë¡
 void move_tail(int player2, int nx, int ny) {
-	int p = player2;  // ÀÌ¸§ÀÌ ±æ¾î¼­...
-	if (player_clear[p] == false && player[p] == true && player_pause == false) {
-		back_buf[nx][ny] = back_buf[px[p]][py[p]];
-		back_buf[px[p]][py[p]] = ' ';
-		px[p] = nx;
-		py[p] = ny;
-	}
+    int p = player2; // ì´ë¦„ì´ ê¸¸ì–´ì„œ...
+    if (player_clear[p] == FALSE && player[p] == TRUE && player_pause == FALSE) {
+        back_buf[nx][ny] = back_buf[px[p]][py[p]];
+        back_buf[px[p]][py[p]] = ' ';
+        px[p] = nx;
+        py[p] = ny;
+    }
 }
 
-void tagger(int n) { // ¼ú·¡ ¹èÄ¡
-	if (n == 1) {
-		back_buf[3][1] = '@';
-		back_buf[4][1] = '@';
-		back_buf[5][1] = '@';
-		
-	}
-	else {
-		back_buf[3][1] = '#';
-		back_buf[4][1] = '#';
-		back_buf[5][1] = '#';
-	}
-
+void place_tagger(int looks_front) { // ìˆ ë˜ ë°°ì¹˜
+    if (looks_front == TRUE) {
+        back_buf[3][1] = '@';
+        back_buf[4][1] = '@';
+        back_buf[5][1] = '@';
+    } else {
+        back_buf[3][1] = '#';
+        back_buf[4][1] = '#';
+        back_buf[5][1] = '#';
+    }
 }
 
-int random_move(void) {
-	int rand_move, last_move;
-	rand_move = rand() % 99; //0~99 ·£´ıÇÑ ¼ıÀÚ
-	if (rand_move <= 69) { // 70% È®·ü·Î ¿ŞÂÊÀ¸·Î ÀÌµ¿
-		return 2;
-	}
-	else if (70 <= rand_move && rand_move <= 79) { // 10% È®·ü·Î À§ÂÊÀ¸·Î ÀÌµ¿
-		return 0;
-	}
-	else if (80 <= rand_move && rand_move <= 89) { // 10% È®·ü·Î ¾Æ·¡ÂÊÀ¸·Î ÀÌµ¿
-		return 1;
-	}
-	else { // 10% È®·ü·Î Á¦ÀÚ¸®
-		return 4;
-	}
+int get_dir_chosen_by_ai(void) {
+    int rand_move, last_move;
+    rand_move = rand() % 99; // 0~99 ëœë¤í•œ ìˆ«ì
+    if (rand_move <= 69) {   // 70% í™•ë¥ ë¡œ ì™¼ìª½ìœ¼ë¡œ ì´ë™
+        return 2;
+    } else if (70 <= rand_move && rand_move <= 79) { // 10% í™•ë¥ ë¡œ ìœ„ìª½ìœ¼ë¡œ ì´ë™
+        return 0;
+    } else if (80 <= rand_move && rand_move <= 89) { // 10% í™•ë¥ ë¡œ ì•„ë˜ìª½ìœ¼ë¡œ ì´ë™
+        return 1;
+    } else { // 10% í™•ë¥ ë¡œ ì œìë¦¬
+        return 4;
+    }
 }
 
-void finish_line(void) {
-	for (int i = 0; i < n_player; i++) {
-		if (1 < px[i] && px[i] <= 6 && py[i] <= 2) {
-			if (!(px[i] == 2 && py[i] == 2 || px[i] == 6 && py[i] == 2)) {
-				player_clear[i] = true;
-				back_buf[px[i]][py[i]] = ' ';
-			}
-		}
-	}
+void has_reached_finish_line(void) {
+    for (int i = 0; i < n_player; i++) {
+        if (1 < px[i] && px[i] <= 6 && py[i] <= 2) {
+            if (!(px[i] == 2 && py[i] == 2 || px[i] == 6 && py[i] == 2)) {
+                player_clear[i] = TRUE;
+                back_buf[px[i]][py[i]] = ' ';
+            }
+        }
+    }
 }
 
-void reload(void) { //¸Ê ´Ù½Ã·Îµå
-	system("cls");
-	map_init(9, 35);
-	tagger(0);
-	for (int i = 0; i < n_player; i++) {
-		if (player[i] == true && player_clear[i] == false) {
-			back_buf[px[i]][py[i]] = '0' + i;
-		}
-	}
+void gamemap_reload(void) { // ë§µ ë‹¤ì‹œë¡œë“œ
+    system("cls");
+    map_init(9, 35);
+    place_tagger(tagger_looks_front);
+    for (int i = 0; i < n_player; i++) {
+        if (player[i] == TRUE && player_clear[i] == FALSE) {
+            back_buf[px[i]][py[i]] = '0' + i;
+        }
+    }
 }
 
-void comment(void) {
-	char intro[] = "¹«±ÃÈ­ ²ÉÀÌ ÇÇ¾ú½À´Ï´Ù";
-	if (tick % (str_intro < 11 ? 1000 : 200) == 0 && tagger_front == 1) {
-		gotoxy(N_ROW, str_intro);
-		if (intro[str_intro] < 0) {
-			printf("%c%c", intro[str_intro], intro[str_intro + 1]);
-			str_intro += 2;
-		}
-		else {
-			printf("%c", intro[str_intro]);
-			str_intro++;
-		}
-	}
+void draw_comment(void) {
+    static const char intro[] = "ë¬´ê¶í™” ê½ƒì´ í”¼ì—ˆìŠµë‹ˆë‹¤";
+    // static const char intro[] = "Mgh Kc Pesnd!";
+    if (tick % (printed_comment_length < 11 ? 1000 : 200) == 0 && tagger_looks_front == FALSE) {
+        gotoxy(N_ROW, printed_comment_length);
+        if (intro[printed_comment_length] < 0) {
+            printf("%c%c", intro[printed_comment_length], intro[printed_comment_length + 1]);
+            printed_comment_length += 2;
+        } else {
+            printf("%c", intro[printed_comment_length]);
+            printed_comment_length++;
+        }
+    }
+}
+
+int check_movable() {
+    for (int i = 0; i < n_player; ++i) {
+        movable[i] = FALSE;
+    }
+    for (int cur = 0; cur < n_player; cur++) {
+        if (player[cur] == FALSE) {
+            continue;
+        }
+        for (int other = 0; other < n_player; ++other) {
+            if (player[other] == FALSE) {
+                continue;
+            }
+            if (cur == other) {
+                continue;
+            }
+            if (py[cur] <= py[other]) {
+                continue;
+            }
+            if (px[cur] == px[other]) {
+                movable[cur] = TRUE;
+                break;
+            }
+        }
+    }
 }
 
 void player_move_check(void) {
-	if (tagger_front == 1) {
-		for (int i = 0; i < n_player; i++) {
-			prex[i] = px[i];
-			prey[i] = py[i];
-		}
-	}
-	else {
-		for (int i = 0; i < n_player; i++) {
-			if (px[i] != prex[i] || py[i] != prey[i]) {
-				player[i] = false;
-				back_buf[px[i]][py[i]] = ' ';
-			}
-		}
-	}
+    if (tagger_looks_front == FALSE) {
+        for (int i = 0; i < n_player; i++) {
+            prex[i] = px[i];
+            prey[i] = py[i];
+        }
+    } else {
+        check_movable();
+        for (int i = 0; i < n_player; i++) {
+            if (movable[i] == FALSE) {
+                if (px[i] == prex[i] && py[i] == prey[i]) {
+                    continue;
+                }
+                player[i] = FALSE;
+                back_buf[px[i]][py[i]] = ' ';
+            } else {
+                prex[i] = px[i];
+                prey[i] = py[i];
+            }
+        }
+    }
 }
 
-void start_game(void) { //¸ğµç ÇÃ·¹ÀÌ¾î¸¦ Ãâ¹ß¼±À¸·Î ¹èÄ¡, ¼ú·¡ ¹èÄ¡
-	gamemap_init();
-	system("cls");
-	display();
-	tagger(0);
-	for (int i = 0; i < n_player; i++) {
-		if (n_player >= 7) {
-			move_tail(i, 1 + i, 33);
-		}
-		else if (n_player >= 5) {
-			move_tail(i, 2 + i, 33);
-		}
-		else if (n_player >= 3) {
-			move_tail(i, 3 + i, 33);
-		}
-		else {
-			move_tail(i, 4 + i, 33);
-		}
-	}
-	dialog("°ğ °ÔÀÓÀÌ ½ÃÀÛµË´Ï´Ù.");
-	reload(); // dialog°¡ ºñÁ¤»óÀû ÀÛµ¿À» ÇØ¼­ ¸Ê ´Ù½ÃºÒ·¯¿À´Â ÀÓ½Ã ÄÚµå (ÃßÈÄ »èÁ¦¹Ù¶÷)
+void start_game(void) { // ëª¨ë“  í”Œë ˆì´ì–´ë¥¼ ì¶œë°œì„ ìœ¼ë¡œ ë°°ì¹˜, ìˆ ë˜ ë°°ì¹˜
+    gamemap_init();
+    system("cls");
+    display();
+    place_tagger(0);
+    for (int i = 0; i < n_player; i++) {
+        if (n_player >= 7) {
+            move_tail(i, 1 + i, 33);
+        } else if (n_player >= 5) {
+            move_tail(i, 2 + i, 33);
+        } else if (n_player >= 3) {
+            move_tail(i, 3 + i, 33);
+        } else {
+            move_tail(i, 4 + i, 33);
+        }
+    }
+    dialog("ê³§ ê²Œì„ì´ ì‹œì‘ë©ë‹ˆë‹¤.");
+    gamemap_reload(); // dialogê°€ ë¹„ì •ìƒì  ì‘ë™ì„ í•´ì„œ ë§µ ë‹¤ì‹œë¶ˆëŸ¬ì˜¤ëŠ” ì„ì‹œ ì½”ë“œ (ì¶”í›„ ì‚­ì œë°”ëŒ)
 }
 
 void mugunghwa(void) {
-	start_game();
-	while (1) {
-		// player 0¸¸ ¼ÕÀ¸·Î ¿òÁ÷ÀÓ(4¹æÇâ)
-		key_t key = get_key();
-		if (key == K_QUIT) {
-			break;
-		}
-		else if (key != K_UNDEFINED) {
-			move_manual(key);
-		}
+    start_game();
+    while (1) {
+        // player 0ë§Œ ì†ìœ¼ë¡œ ì›€ì§ì„(4ë°©í–¥)
+        key_t key = get_key();
+        if (key == K_QUIT) {
+            break;
+        } else if (key != K_UNDEFINED) {
+            move_manual(key);
+        }
 
-		for (int i = 1; i < n_player; i++) {
-			if (tick % period[i] == 0 && tagger_front == 1) { // µÚ¿¡ º¼ ¶§
-				move_random(i, random_move());
-			}
-			else if (tick % period[i] == 0 && tagger_front == 0) { // ¾Õ¿¡ º¼ ¶§
-				int rand_move;
-				rand_move = rand() % 99; //0~99 ·£´ıÇÑ ¼ıÀÚ
-				if (rand_move <= 9) { // 10% È®·ü·Î ¿òÁ÷ÀÓ
-					move_random(i, random_move());
-				}
-			}
-		}
-		finish_line();
-		player_move_check();
-		comment();
-		display();
-		Sleep(10);
-		tick += 10;
-		if (tick % 3000 == 0 && tagger_front == 0) {
-			tagger_front = 1;
-			reload();
-		}
-		if (str_intro == 22) {
-			str_intro = 0;
-			tagger_front = 0;
-			tagger(1);
-			tick = 0;
-		}
-	}
+        for (int i = 1; i < n_player; i++) {
+            if (tick % period[i] == 0 && tagger_looks_front == FALSE) { // ë’¤ì— ë³¼ ë•Œ
+                move_random(i, get_dir_chosen_by_ai());
+            } else if (tick % period[i] == 0 && tagger_looks_front == TRUE) { // ì•ì— ë³¼ ë•Œ
+                int rand_move = rand() % 100;                                 // 0~99 ëœë¤í•œ ìˆ«ì
+                if (rand_move < 10) {                                         // 10% í™•ë¥ ë¡œ ì›€ì§ì„
+                    move_random(i, get_dir_chosen_by_ai());
+                }
+            }
+        }
+        has_reached_finish_line();
+        player_move_check();
+        draw_comment();
+        display();
+        Sleep(10);
+        tick += 10;
+        const int is_tagger_judgment_over = tick % 3000 == 0 && tagger_looks_front == TRUE;
+        if (is_tagger_judgment_over) {
+            tagger_looks_front = FALSE;
+            gamemap_reload();
+        }
+        if (printed_comment_length == 22) {
+            printed_comment_length = 0;
+            tagger_looks_front = TRUE;
+            place_tagger(TRUE);
+            tick = 0;
+        }
+    }
 }
