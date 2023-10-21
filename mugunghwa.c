@@ -8,12 +8,15 @@
 #define DIR_LEFT	2
 #define DIR_RIGHT	3
 
+#define TRUE  1
+#define FALSE 0
+
 void gamemap_init(void);
 void move_manual(key_t key);
 void move_random(int i, int dir);
 void move_tail(int i, int nx, int ny);
 
-int px[PLAYER_MAX], py[PLAYER_MAX], period[PLAYER_MAX], prex[PLAYER_MAX], prey[PLAYER_MAX], dead_player[PLAYER_MAX];  // 각 플레이어 위치, 이동 주기
+int px[PLAYER_MAX], py[PLAYER_MAX], period[PLAYER_MAX], prex[PLAYER_MAX], prey[PLAYER_MAX], dead_player[PLAYER_MAX], movable[PLAYER_MAX];  // 각 플레이어 위치, 이동 주기
 int str_intro = 0, tagger_front = 1, playing_member;
 
 
@@ -214,6 +217,32 @@ void dead_msg(void) {
 	}
 }
 
+int check_movable() {
+	for (int i = 0; i < n_player; ++i) {
+		movable[i] = FALSE;
+	}
+	for (int cur = 0; cur < n_player; cur++) {
+		if (player[cur] == FALSE) {
+			continue;
+		}
+		for (int other = 0; other < n_player; ++other) {
+			if (player[other] == FALSE) {
+				continue;
+			}
+			if (cur == other) {
+				continue;
+			}
+			if (py[cur] <= py[other]) {
+				continue;
+			}
+			if (px[cur] == px[other]) {
+				movable[cur] = TRUE;
+				break;
+			}
+		}
+	}
+}
+
 void player_move_check(void) {
 	if (tagger_front == 1) { //뒤 볼때가 1 앞 보면 0
 		for (int i = 0; i < n_player; i++) {
@@ -222,9 +251,12 @@ void player_move_check(void) {
 		}
 	}
 	else {
-		for (int i = 0; i < n_player; i++) {
-
-			if (px[i] != prex[i] || py[i] != prey[i]) {
+        check_movable();
+        for (int i = 0; i < n_player; i++) {
+            if (movable[i] == FALSE) {
+                if (px[i] == prex[i] && py[i] == prey[i]) {
+                    continue;
+                }
 				if (player[i] == true) {
 					player[i] = false;
 					back_buf[px[i]][py[i]] = ' ';
@@ -234,10 +266,15 @@ void player_move_check(void) {
 					n_alive--;
 					playing_member--;
 				}
-			}
-		}
-	}
+            } else {
+                prex[i] = px[i];
+                prey[i] = py[i];
+            }
+        }
+    }
 }
+
+
 
 void start_game(void) { //모든 플레이어를 출발선으로 배치, 술래 배치
 	gamemap_init();
